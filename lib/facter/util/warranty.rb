@@ -27,6 +27,11 @@ module Facter::Util::Warranty
       begin
         File.open(cache_file, "r") do |f|
           dell_cache = PSON.load(f)
+          # If we cached an error, clear it to try again
+          if not dell_cache['GetAssetWarrantyResponse']['GetAssetWarrantyResult']['Faults'].nil?
+            Facter.debug("Cached fault found, clearing.")
+            dell_cache = nil
+          end
         end
         cache_time = File.mtime(cache_file)
       rescue Exception => e
@@ -67,13 +72,18 @@ module Facter::Util::Warranty
         }
 
         json = PSON.parse(response) if response
+        # Write cache if successful
+        if json['GetAssetWarrantyResponse']['GetAssetWarrantyResult']['Faults'].nil?
+          Facter.debug('Writing cache')
+          write_cache(json)
+          json
+        else
+          Facter.debug("Response has fault: #{json['GetAssetWarrantyResponse']['GetAssetWarrantyResult']['Faults']}")
+        end
+
       rescue Exception => e
         Facter.debug("#{e.backtrace[0]}: #{$!}.")
       end
-      # Write cache
-      Facter.debug('Writing cache')
-      write_cache(json)
-      json
     else
       Facter.debug('Using cached data')
       if (dell_cache)
@@ -86,16 +96,22 @@ module Facter::Util::Warranty
 
   def self.purchase_date
     Facter.debug('Getting purchase date')
-    json = get_data
-    if defined?(json)
+    begin
+      json = get_data
       pd = json['GetAssetWarrantyResponse']['GetAssetWarrantyResult']['Response']['DellAsset']['ShipDate']
       Date.parse(pd)
+    rescue
+      nil
     end
   end
 
   def self.warranties
     Facter.debug('Getting warranties')
-    json = get_data
-    json['GetAssetWarrantyResponse']['GetAssetWarrantyResult']['Response']['DellAsset']['Warranties']['Warranty'] if defined?(json)
+    begin
+      json = get_data
+      json['GetAssetWarrantyResponse']['GetAssetWarrantyResult']['Response']['DellAsset']['Warranties']['Warranty']
+    rescue
+      nil
+    end
   end
 end
