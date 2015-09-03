@@ -1,6 +1,14 @@
 # Based on https://github.com/kwolf/dell_info/blob/master/lib/facter/dell_info.rb
 
-require 'facter/util/warranty'
+begin
+  require 'facter/util/warranty'
+rescue LoadError => e
+  # puppet apply does not add module lib directories to the $LOAD_PATH (See
+  # #4248). It should (in the future) but for the time being we need to be
+  # defensive which is what this rescue block is doing.
+  rb_file = File.join(File.dirname(__FILE__), 'util', 'warranty.rb')
+  load rb_file if File.exists?(rb_file) or raise e
+end
 
 
 Facter.add(:is_dell_machine) do
@@ -21,12 +29,16 @@ Facter.add(:warranty_end, :timeout => 30) do
 
   setcode do
     enddate = Date.parse(Time.at(0).to_s)
-    Facter::Util::Warranty.warranties.each do |warranty|
-      if Date.parse(warranty['EndDate']) > enddate
-        enddate = Date.parse(warranty['EndDate'])
+    warranties = Facter::Util::Warranty.warranties
+    if not warranties.nil?
+      warranties.each do |warranty|
+        next if warranty.nil?
+        if Date.parse(warranty['EndDate']) > enddate
+          enddate = Date.parse(warranty['EndDate'])
+        end
       end
+      enddate.to_s
     end
-    enddate.to_s
   end
 end
 
