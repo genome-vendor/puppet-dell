@@ -8,7 +8,7 @@ module Facter::Util::Warranty
   end
 
   def self.apikey
-    '1adecee8a60444738f280aad1cd87d0e'
+    'd676cf6e1e0ceb8fd14e8cb69acd812d'
   end
 
   def self.cache_file
