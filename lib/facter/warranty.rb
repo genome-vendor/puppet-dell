@@ -21,12 +21,17 @@ Facter.add(:warranty_end) do
 
   setcode do
     enddate = Date.parse(Time.at(0).to_s)
-    Facter::Util::Warranty.warranties.each do |warranty|
-      if Date.parse(warranty['EndDate']) > enddate
-        enddate = Date.parse(warranty['EndDate'])
+    warranties = Facter::Util::Warranty.warranties
+    if not warranties.nil?
+      warranties.each do |warranty|
+        next if warranty.nil?
+        next if warranty['EndDate'].nil?
+        if Date.parse(warranty['EndDate']) > enddate
+          enddate = Date.parse(warranty['EndDate'])
+        end
       end
+      enddate.to_s
     end
-    enddate.to_s
   end
 end
 
@@ -35,7 +40,11 @@ Facter.add(:warranty_days_left) do
 
   setcode do
     today = Date.parse(Time.now.to_s)
-    enddate = Date.parse(Facter.value(:warranty_end))
+    if Facter.value(:warranty_end).nil?
+      enddate = Date.parse(Time.now.to_s)
+    else
+      enddate = Date.parse(Facter.value(:warranty_end))
+    end
     (enddate - today).to_i
   end
 end
