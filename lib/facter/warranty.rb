@@ -33,6 +33,7 @@ Facter.add(:warranty_end, :timeout => 30) do
     if not warranties.nil?
       warranties.each do |warranty|
         next if warranty.nil?
+        next if warranty['EndDate'].nil?
         if Date.parse(warranty['EndDate']) > enddate
           enddate = Date.parse(warranty['EndDate'])
         end
@@ -47,7 +48,11 @@ Facter.add(:warranty_days_left, :timeout => 30) do
 
   setcode do
     today = Date.parse(Time.now.to_s)
-    enddate = Date.parse(Facter.value(:warranty_end))
+    if Facter.value(:warranty_end).nil?
+      enddate = Date.parse(Time.now.to_s)
+    else
+      enddate = Date.parse(Facter.value(:warranty_end))
+    end
     (enddate - today).to_i
   end
 end
