@@ -18,13 +18,13 @@ Facter.add(:is_dell_machine) do
   setcode { !!(Facter.value(:serialnumber) && Facter.value(:manufacturer) =~ /dell/i) }
 end
 
-Facter.add(:warranty_start, :timeout => 30) do
+Facter.add(:warranty_start, :timeout => 300) do
   confine :is_dell_machine => true
 
   setcode { Facter::Util::Warranty.purchase_date.to_s }
 end
 
-Facter.add(:warranty_end, :timeout => 30) do
+Facter.add(:warranty_end, :timeout => 300) do
   confine :is_dell_machine => true
 
   setcode do
@@ -43,7 +43,7 @@ Facter.add(:warranty_end, :timeout => 30) do
   end
 end
 
-Facter.add(:warranty_days_left, :timeout => 30) do
+Facter.add(:warranty_days_left, :timeout => 300) do
   confine :is_dell_machine => true
 
   setcode do

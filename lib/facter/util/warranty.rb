@@ -65,7 +65,7 @@ module Facter::Util::Warranty
       api_url = url % [apikey, Facter.value('serialnumber')]
       begin
         response = nil
-        Timeout::timeout(30) {
+        Timeout::timeout(300) {
           Facter.debug('Getting api.dell.com')
           Facter.debug("url=#{api_url}")
           response = Facter::Util::Resolution.exec("/usr/bin/curl -ks '#{api_url}'")
